@@ -40,29 +40,29 @@ class Bear extends AggregateRoot<IBear> {
   protected state: IBear = {
     name: ''
   }
-  
+
   public addName (name: string) {
-    
+
     if (name === 'yogi') {
-			throw NameNotAllowedDomainError('There can be only one Yogi Bear')
+      throw NameNotAllowedDomainError('There can be only one Yogi Bear')
     }
 
-		this.apply(new AddedBearNameEvent(name))
+    this.apply(new AddedBearNameEvent(name))
   }
-  
+
   protected onAddedBearNameEvent (event: AddedBearNameEvent) {
-		this.state = {
+    this.state = {
       ...this.state,
       name: event.name,
     }
   }
 
   public snapshot () {
-		return new SnapshotBearV1Event(
-    	this.state
+    return new SnapshotBearV1Event(
+      this.state
     )
   }
-  
+
   protected onSnapshotBearV1Event (event: SnapshotBearV1Event) {
     this.state = event.data
   }
@@ -80,11 +80,11 @@ This means that if you expect to load the full aggregate event history in order 
 
 ### Locking the Aggretate and Handling Failures
 
-If you are not working with a moder event database then you may need to setup a way to lock and unlock your aggregate when applying changes in order to preserve event ordering.
+If you are not working with a modern event database then you may need to setup a way to lock and unlock your aggregate when applying changes in order to preserve event ordering.
 
-You may choose to do this in your aggregate loader service and in these cases it can be helpful to have a way to unlock the aggregate should error.
+You may choose to do this in your aggregate loader service and in these cases it can be helpful to have a way to unlock the aggregate should it error.
 
-This can be achieved with the `setFailureHandler` which accepts a custom function that can be invokved when a domain error occures within the aggregate.
+This can be achieved with the `setFailureHandler` which accepts a custom function that can be invoked when a domain error occures within the aggregate.
 
 The below demonstrates how it may be used by first locking the aggregate based on it's ID. Then it sets the failure handler so that when the aggregate throws an error it will automatically be unlocked.
 
@@ -157,7 +157,9 @@ The below example loads an aggregate ensuring it is locked and loaded. We then p
 
 ```typescript
 const aggregate = await aggregateManagerService.load(aggregateId)
-aggregate.markAsPaid(cartItem)
+
+aggregate.signUp(registrationInfo)
+
 aggregateManagerService.commit(aggregate)
 ```
 
@@ -204,22 +206,22 @@ describe('User Aggregate', () => {
       .has.one.event(RegisteredUserEvent)
       .that.includes({ email })
       .and.has.one.event(RequestedUserEmailVerificationEvent)
-  
+
       // Add username
-    	.and.when(aggregate => aggregate.addUsername("yogi bear"))
-    	.and.when(aggregate => aggregate.addUsername(username))
-    	.has.exactly(2).events(AddedUserUsernameEvent)
-    	.and.has.last.event(AddedUserUsernameEvent)
-    	.that.includes({ username })
-  
-    	// Invalid email verification
-    	.and.throws.when(aggregate => aggregate.verifyEmail("invalid token"))
-    	.and.excludes.event(VerifiedUserEmailEvent)
-  
+      .and.when(aggregate => aggregate.addUsername("yogi bear"))
+      .and.when(aggregate => aggregate.addUsername(username))
+      .has.exactly(2).events(AddedUserUsernameEvent)
+      .and.has.last.event(AddedUserUsernameEvent)
+      .that.includes({ username })
+
+      // Invalid email verification
+      .and.throws.when(aggregate => aggregate.verifyEmail("invalid token"))
+      .and.excludes.event(VerifiedUserEmailEvent)
+
       // Valid email verificaiton
       .and.when(aggregate => aggregate.verifyEmail(verificationToken))
       .has.one.event(VerifiedUserEmailEvent)
-    	.that.includes({ email })
+      .that.includes({ email })
   })
 })
 ```

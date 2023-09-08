@@ -40,29 +40,29 @@ class Bear extends AggregateRoot<IBear> {
   protected state: IBear = {
     name: ''
   }
-  
+
   public addName (name: string) {
-    
+
     if (name === 'yogi') {
-			throw NameNotAllowedDomainError('There can be only one Yogi Bear')
+      throw NameNotAllowedDomainError('There can be only one Yogi Bear')
     }
 
-		this.apply(new AddedBearNameEvent(name))
+    this.apply(new AddedBearNameEvent(name))
   }
-  
+
   protected onAddedBearNameEvent (event: AddedBearNameEvent) {
-		this.state = {
+    this.state = {
       ...this.state,
       name: event.name,
     }
   }
 
   public snapshot () {
-		return new SnapshotBearV1Event(
-    	this.state
+    return new SnapshotBearV1Event(
+      this.state
     )
   }
-  
+
   protected onSnapshotBearV1Event (event: SnapshotBearV1Event) {
     this.state = event.data
   }
@@ -206,22 +206,22 @@ describe('User Aggregate', () => {
       .has.one.event(RegisteredUserEvent)
       .that.includes({ email })
       .and.has.one.event(RequestedUserEmailVerificationEvent)
-  
+
       // Add username
-    	.and.when(aggregate => aggregate.addUsername("yogi bear"))
-    	.and.when(aggregate => aggregate.addUsername(username))
-    	.has.exactly(2).events(AddedUserUsernameEvent)
-    	.and.has.last.event(AddedUserUsernameEvent)
-    	.that.includes({ username })
-  
-    	// Invalid email verification
-    	.and.throws.when(aggregate => aggregate.verifyEmail("invalid token"))
-    	.and.excludes.event(VerifiedUserEmailEvent)
-  
+      .and.when(aggregate => aggregate.addUsername("yogi bear"))
+      .and.when(aggregate => aggregate.addUsername(username))
+      .has.exactly(2).events(AddedUserUsernameEvent)
+      .and.has.last.event(AddedUserUsernameEvent)
+      .that.includes({ username })
+
+      // Invalid email verification
+      .and.throws.when(aggregate => aggregate.verifyEmail("invalid token"))
+      .and.excludes.event(VerifiedUserEmailEvent)
+
       // Valid email verificaiton
       .and.when(aggregate => aggregate.verifyEmail(verificationToken))
       .has.one.event(VerifiedUserEmailEvent)
-    	.that.includes({ email })
+      .that.includes({ email })
   })
 })
 ```
